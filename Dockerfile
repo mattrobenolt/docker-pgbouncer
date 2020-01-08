@@ -1,16 +1,17 @@
-FROM alpine:3.8
+FROM alpine:3.11
 
 RUN addgroup -S pgbouncer && adduser -S -G pgbouncer pgbouncer
 
 RUN apk add --no-cache 'su-exec>=0.2'
 
-ENV PGBOUNCER_VERSION 1.9.0
-ENV PGBOUNCER_DOWNLOAD_URL https://pgbouncer.github.io/downloads/files/1.9.0/pgbouncer-1.9.0.tar.gz
-ENV PGBOUNCER_DOWNLOAD_SHA256 39eca9613398636327e79cbcbd5b41115035bca9ca1bd3725539646468825f04
+ENV PGBOUNCER_VERSION 1.12.0
+ENV PGBOUNCER_DOWNLOAD_URL https://pgbouncer.github.io/downloads/files/1.12.0/pgbouncer-1.12.0.tar.gz
+ENV PGBOUNCER_DOWNLOAD_SHA256 1b3c6564376cafa0da98df3520f0e932bb2aebaf9a95ca5b9fa461e9eb7b273e
 
 RUN set -x \
 	&& apk add --no-cache --virtual .fetch-deps curl tar \
 	&& curl -fSL "$PGBOUNCER_DOWNLOAD_URL" -o pgbouncer.tar.gz \
+	&& echo "$PGBOUNCER_DOWNLOAD_SHA256 *pgbouncer.tar.gz" | sha256sum -c - \
 	&& mkdir -p /usr/src/pgbouncer \
 	&& tar -xzf pgbouncer.tar.gz -C /usr/src/pgbouncer --strip-components=1 \
 	&& rm pgbouncer.tar.gz \
@@ -24,12 +25,17 @@ RUN set -x \
 		make \
 		openssl-dev \
 	&& cd /usr/src/pgbouncer \
-	&& ./configure --prefix=/usr/local --with-libevent=libevent-prefix \
+	&& ./configure \
+		--prefix=/usr/local \
+		--with-cares \
 	&& make -j$(getconf _NPROCESSORS_ONLN) \
 	&& make install \
-	&& mv -v /usr/src/pgbouncer/etc/pgbouncer.ini /etc/ \
-	&& sed -ri "s!^#?(listen_addr)\s*=\s*\S+.*!\1 = *!" /etc/pgbouncer.ini \
-	&& sed -ri "s!^#?(logfile)\s*=\s*\S+.*!!" /etc/pgbouncer.ini \
+	&& install -d /etc/pgbouncer/ \
+	&& install -m 644 /usr/src/pgbouncer/etc/pgbouncer.ini /etc/ \
+	&& sed -ri "s!^;?(listen_addr)\s*=\s*\S+.*!\1 = *!" /etc/pgbouncer.ini \
+	&& sed -ri "s!^;?(logfile)\s*=\s*\S+.*!!" /etc/pgbouncer.ini \
+	&& sed -ri "s!^;?(pidfile)\s*=\s*\S+.*!!" /etc/pgbouncer.ini \
+	&& sed -ri "s!^;?(admin_users)\s*=\s*\S+.*!\1 = pgbouncer!" /etc/pgbouncer.ini \
 	&& runDeps="$( \
 		scanelf --needed --nobanner --recursive /usr/local \
 			| awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
@@ -42,9 +48,10 @@ RUN set -x \
 	&& rm -r /usr/src/pgbouncer \
 	&& rm -r /usr/local/share/doc/pgbouncer
 
-ENV PGBOUNCER_RUNDIR /var/run/pgbouncer
-
 COPY docker-entrypoint.sh /usr/local/bin/
+
+EXPOSE 6432/tcp
+
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 CMD ["pgbouncer", "/etc/pgbouncer.ini"]
