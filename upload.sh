@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu
 
-aliases='1 1.12 latest'
+aliases='1 1.14 latest'
 tag='mattrobenolt/pgbouncer'
 
 fullVersion=$(awk '$1 == "ENV" && $2 == "PGBOUNCER_VERSION" { print $3; exit }' Dockerfile)

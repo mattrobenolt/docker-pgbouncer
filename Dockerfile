@@ -1,12 +1,12 @@
-FROM alpine:3.11
+FROM alpine:3.12
 
 RUN addgroup -S pgbouncer && adduser -S -G pgbouncer pgbouncer
 
 RUN apk add --no-cache 'su-exec>=0.2'
 
-ENV PGBOUNCER_VERSION 1.12.0
-ENV PGBOUNCER_DOWNLOAD_URL https://pgbouncer.github.io/downloads/files/1.12.0/pgbouncer-1.12.0.tar.gz
-ENV PGBOUNCER_DOWNLOAD_SHA256 1b3c6564376cafa0da98df3520f0e932bb2aebaf9a95ca5b9fa461e9eb7b273e
+ENV PGBOUNCER_VERSION 1.14.0
+ENV PGBOUNCER_DOWNLOAD_URL http://www.pgbouncer.org/downloads/files/1.14.0/pgbouncer-1.14.0.tar.gz
+ENV PGBOUNCER_DOWNLOAD_SHA256 a0c13d10148f557e36ff7ed31793abb7a49e1f8b09aa2d4695d1c28fa101fee7
 
 RUN set -x \
 	&& apk add --no-cache --virtual .fetch-deps curl tar \
@@ -32,7 +32,7 @@ RUN set -x \
 	&& make install \
 	&& install -d /etc/pgbouncer/ \
 	&& install -m 644 /usr/src/pgbouncer/etc/pgbouncer.ini /etc/ \
-	&& sed -ri "s!^;?(listen_addr)\s*=\s*\S+.*!\1 = *!" /etc/pgbouncer.ini \
+	&& sed -ri "s!^;?(listen_addr)\s*=\s*\S+.*!\1 = 0.0.0.0!" /etc/pgbouncer.ini \
 	&& sed -ri "s!^;?(logfile)\s*=\s*\S+.*!!" /etc/pgbouncer.ini \
 	&& sed -ri "s!^;?(pidfile)\s*=\s*\S+.*!!" /etc/pgbouncer.ini \
 	&& sed -ri "s!^;?(admin_users)\s*=\s*\S+.*!\1 = pgbouncer!" /etc/pgbouncer.ini \
