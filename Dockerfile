@@ -4,9 +4,9 @@ RUN addgroup -S pgbouncer && adduser -S -G pgbouncer pgbouncer
 
 RUN apk add --no-cache 'su-exec>=0.2'
 
-ENV PGBOUNCER_VERSION 1.14.0
-ENV PGBOUNCER_DOWNLOAD_URL http://www.pgbouncer.org/downloads/files/1.14.0/pgbouncer-1.14.0.tar.gz
-ENV PGBOUNCER_DOWNLOAD_SHA256 a0c13d10148f557e36ff7ed31793abb7a49e1f8b09aa2d4695d1c28fa101fee7
+ENV PGBOUNCER_VERSION 1.15.0
+ENV PGBOUNCER_DOWNLOAD_URL http://www.pgbouncer.org/downloads/files/1.15.0/pgbouncer-1.15.0.tar.gz
+ENV PGBOUNCER_DOWNLOAD_SHA256 e05a9e158aa6256f60aacbcd9125d3109155c1001a1d1c15d33a37c685d31380
 
 RUN set -x \
 	&& apk add --no-cache --virtual .fetch-deps curl tar \
